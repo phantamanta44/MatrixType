@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const {RootParsingContext} = require('./parsing');
+const {Parser} = require('./parsing');
 
 const args = process.argv.slice(2);
 let input;
@@ -25,43 +25,15 @@ switch (args.length) {
 }
 
 if (!!input && !!output) {
-  let parsingContext = new RootParsingContext();
-  let line = 1;
-  let column = 0;
-  function done() {
-    if (!(parsingContext instanceof RootParsingContext)) {
-      output.write('Reached end of file, but not root parsing context!!\n');
+  const parser = new Parser();
+  input.on('data', (chunk) => parser.parse(chunk.toString()));
+  input.on('end', () => {
+    const result = parser.done();
+    if (!!result.error) {
+      output.write(result.error + '\n');
       process.exitCode = 1;
-    } else if (!parsingContext.error) {
-      output.write(parsingContext.compiled.replace(/ +/g, ' ') + '\n');
     } else {
-      output.write('Failed to parse!\n');
-      if (!!parsingContext.error) {
-        output.write(`${parsingContext.error} (${line}:${column})\n`);
-      }
-      process.exitCode = 1;
-    }
-  }
-  input.on('data', (chunk) => {
-    for (const char of chunk.toString()) {
-      let needsParse = true;
-      while (needsParse) {
-        if (char === '\n') {
-          line++;
-          column = 0;
-        } else {
-          column++;
-        }
-        const result = parsingContext.accept(char);
-        needsParse = !!result && result.ignored;
-        if (!!parsingContext.error) {
-          done();
-          break;
-        } else if (!!result && !!result.newContext) {
-          parsingContext = result.newContext;
-        }
-      }
+      output.write(result.result + '\n');
     }
   });
-  input.on('end', done);
 }

@@ -22,12 +22,12 @@ class RootParsingContext extends ParsingContext {
     if (char === '[') {
       return {
         newContext: new MatrixParsingContext(this),
-      }
+      };
     } else if (operatorChars.indexOf(char) !== -1) {
       return {
         newContext: new OperatorParsingContext(this),
         ignored: true,
-      }
+      };
     } else if (char === ';') {
       this.compiled += '\\\\\n';
     } else {
@@ -133,6 +133,74 @@ class MatrixParsingContext extends ChildParsingContext {
   }
 }
 
+class Parser {
+  constructor() {
+    this.parsingContext = new RootParsingContext();
+    this.line = 1;
+    this.column = 0;
+    this.result = null;
+  }
+
+  done() {
+    if (!!this.result) {
+      throw new Error('Parser already done!');
+    }
+    if (!!this.parsingContext.error) {
+      this.result = {
+        result: null,
+        error: `${this.parsingContext.error} (${this.line}:${this.column})\n`,
+      };
+    } else if (!(this.parsingContext instanceof RootParsingContext)) {
+      this.result = {
+        result: null,
+        error: 'Reached end of input, but not root parsing context!',
+      };
+    } else {
+      this.result = {
+        result: this.parsingContext.compiled
+          .replace(/ +/g, ' ')
+          .trim()
+          .replace(/\\\\$/g, ''),
+        error: null,
+      };
+    }
+    return this.result;
+  }
+
+  parse(section) {
+    for (const char of section) {
+      let needsParse = true;
+      while (needsParse) {
+        needsParse = this._nextChar(char);
+      }
+    }
+  }
+
+  _nextChar(char) {
+    if (char === '\n') {
+      this.line++;
+      this.column = 0;
+    } else {
+      this.column++;
+    }
+    const result = this.parsingContext.accept(char);
+    if (!!this.parsingContext.error) {
+      this.done();
+      return false;
+    } else if (!!result && !!result.newContext) {
+      this.parsingContext = result.newContext;
+    }
+    return !!result && !!result.ignored;
+  }
+}
+
+function parse(text) {
+  const parser = new Parser();
+  parser.parse(text);
+  return parser.done();
+}
+
 module.exports = {
-  RootParsingContext,
+  Parser,
+  parse,
 };
