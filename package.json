@@ -1,0 +1,25 @@
+{
+  "name": "matrixtype",
+  "version": "1.0.0",
+  "description": "cleaner than latex, somehow",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phantamanta44/MatrixType.git"
+  },
+  "dependencies": {
+    "eslint-config-google": "^0.9.1"
+  },
+  "engines": {
+    "node": "8.4.0"
+  },
+  "bin": {
+    "matype": "./main.js"
+  },
+  "devDependencies": {
+    "eslint": "^4.6.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-react": "^7.3.0"
+  }
+}
