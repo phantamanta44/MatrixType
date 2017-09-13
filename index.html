@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>it's a matrixtype</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.css">
+    <style>
+      * {
+        margin: 0; padding: 0;
+        box-sizing: border-box;
+      }
+      
+      #wrapper {
+        height: 100vh;
+        display: flex;
+        flex-flow: row;
+      }
+      
+      #wrapper > div {
+        height: 100%;
+        flex: 1;
+        overflow: scroll;
+      }
+      
+      #latex {
+        white-space: pre;
+        font-family: 'Source Code Pro', monospace;
+        border-left: 2px solid #d0d0d0;
+        border-right: 2px solid #d0d0d0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div id="editor"></div>
+      <div id="latex"></div>
+      <div id="preview"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.8/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.js"></script>
+    <script>
+      let module = {};
+    </script>
+    <script src="parsing.js"></script>
+    <script>
+      function selectElement(element) {
+        let doc = document;
+        if (doc.body.createTextRange) {
+          let range = document.body.createTextRange();
+          range.moveToElementText(element);
+          range.select();
+        } else if (window.getSelection) {
+          let selection = window.getSelection();
+          let range = document.createRange();
+          range.selectNodeContents(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      const latex = document.getElementById('latex');
+      const preview = document.getElementById('preview');
+
+      const editor = ace.edit('editor');
+      editor.getSession().setUseSoftTabs(true);
+
+      function updateOutput() {
+        let result = parse(editor.getValue());
+        if (!!result.error) {
+          latex.innerText = result.error;
+          preview.innerHTML = '';
+        } else {
+          latex.innerText = result.result;
+          try {
+            katex.render(latex.innerText, preview); 
+          } catch (e) {
+            preview.innerHTML = e.message;
+          }
+        }
+      }
+
+      editor.getSession().on("change", updateOutput);
+      latex.onclick = function() {
+        selectElement(latex);
+      };
+    </script>
+  </body>
+</html>
