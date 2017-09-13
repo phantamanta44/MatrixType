@@ -28,7 +28,7 @@ if (!!input && !!output) {
   const parser = new Parser();
   input.on('data', (chunk) => parser.parse(chunk.toString()));
   input.on('end', () => {
-    const result = parser.done();
+    const result = parser.result || parser.done();
     if (!!result.error) {
       output.write(result.error + '\n');
       process.exitCode = 1;
