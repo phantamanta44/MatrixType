@@ -5,6 +5,9 @@ module.exports = {
   parserOptions: {
     sourceType: 'module',
     ecmaVersion: 8,
+    ecmaFeatures: {
+      experimentalObjectRestSpread: 2,
+    },
   },
   extends: 'google',
   rules: {

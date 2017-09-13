@@ -33,7 +33,7 @@ if (!!input && !!output) {
       output.write('Reached end of file, but not root parsing context!!\n');
       process.exitCode = 1;
     } else if (!parsingContext.error) {
-      output.write(parsingContext.compiled + '\n');
+      output.write(parsingContext.compiled.replace(/ +/g, ' ') + '\n');
     } else {
       output.write('Failed to parse!\n');
       if (!!parsingContext.error) {
@@ -44,17 +44,22 @@ if (!!input && !!output) {
   }
   input.on('data', (chunk) => {
     for (const char of chunk.toString()) {
-      if (char === '\n') {
-        line++;
-        column = 0;
-      } else {
-        column++;
-      }
-      let newContext = parsingContext.accept(char);
-      if (!!parsingContext.error) {
-        done();
-      } else if (!!newContext) {
-        parsingContext = newContext;
+      let needsParse = true;
+      while (needsParse) {
+        if (char === '\n') {
+          line++;
+          column = 0;
+        } else {
+          column++;
+        }
+        const result = parsingContext.accept(char);
+        needsParse = !!result && result.ignored;
+        if (!!parsingContext.error) {
+          done();
+          break;
+        } else if (!!result && !!result.newContext) {
+          parsingContext = result.newContext;
+        }
       }
     }
   });

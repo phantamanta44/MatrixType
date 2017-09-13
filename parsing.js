@@ -6,7 +6,7 @@ class ParsingContext {
 
   callback(mutator) {
     this.compiled = mutator(this.compiled);
-    return this;
+    return {newContext: this};
   }
 }
 
@@ -20,13 +20,58 @@ class ChildParsingContext extends ParsingContext {
 class RootParsingContext extends ParsingContext {
   accept(char) {
     if (char === '[') {
-      return new MatrixParsingContext(this);
-    } else if (char === '*') {
-      this.compiled += '\\times';
+      return {
+        newContext: new MatrixParsingContext(this),
+      }
+    } else if (operatorChars.indexOf(char) !== -1) {
+      return {
+        newContext: new OperatorParsingContext(this),
+        ignored: true,
+      }
     } else if (char === ';') {
       this.compiled += '\\\\\n';
     } else {
       this.compiled += char;
+    }
+  }
+}
+
+
+const operatorChars = '+\-*=<>^;';
+const operators = {
+  '+': '+',
+  '-': '-',
+  '*': '\\times',
+  '>': '>',
+  '!>': '\\nless',
+  '<': '<',
+  '!>': '\\ngtr',
+  '=': '=',
+  '!=': '\\neq',
+  '<=': '\\leq',
+  '!<=': '\\nleq',
+  '>=': '\\geq',
+  '!>=': '\\ngeq',
+  '~=': '\\approx',
+  '=>': '\\Rightarrow',
+  '->': '\\rightarrow',
+  '==>': '\\implies',
+  '<==>': '\\iff',
+  '<=>': '\\Leftrightarrow',
+  ';': '\\\\\n',
+};
+class OperatorParsingContext extends ChildParsingContext {
+  accept(char) {
+    if (operatorChars.indexOf(char) !== -1) {
+      this.compiled += char;
+    } else {
+      if (operators.hasOwnProperty(this.compiled)) {
+        this.compiled = operators[this.compiled];
+      }
+      return {
+        ...this.parent.callback((c) => `${c.trimRight()} ${this.compiled} `),
+        ignored: true,
+      };
     }
   }
 }
