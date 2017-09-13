@@ -22,7 +22,7 @@ class RootParsingContext extends ParsingContext {
     if (char === '[') {
       return new MatrixParsingContext(this);
     } else if (char === '*') {
-      this.compiled += '\\times'
+      this.compiled += '\\times';
     } else if (char === ';') {
       this.compiled += '\\\\\n';
     } else {
