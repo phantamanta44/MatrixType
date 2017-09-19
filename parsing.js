@@ -172,8 +172,12 @@ class Parser {
       let needsParse = true;
       while (needsParse) {
         needsParse = this._nextChar(char);
+        if (!!this.result) {
+          return false;
+        }
       }
     }
+    return true;
   }
 
   _nextChar(char) {
@@ -196,8 +200,7 @@ class Parser {
 
 function parse(text) {
   const parser = new Parser();
-  parser.parse(text);
-  return parser.done();
+  return parser.parse(text) ? parser.done() : parser.result;
 }
 
 module.exports = {
